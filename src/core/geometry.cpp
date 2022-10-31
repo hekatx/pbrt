@@ -1,1 +1,5 @@
-int getRandomNumber() { return 41; }
+#include "geometry.h"
+
+namespace pbrt {
+
+}  // namespace pbrt
