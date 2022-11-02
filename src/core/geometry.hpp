@@ -3,6 +3,8 @@
 #include <cmath>
 #include <stdlib.h>
 
+template <typename T> class Normal3;
+
 template <typename T> class Vector2 {
 public:
   T x, y;
@@ -68,6 +70,7 @@ public:
   T x, y, z;
 
   Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
+  explicit Vector3(const Normal3<T> &n);
 
   T operator[](int i) const {
     if (i == 0)
@@ -315,4 +318,88 @@ typedef Point3<int> Point3i;
 template <typename T>
 Point3<T> Permute(const Point3<T> &p, int x, int y, int z) {
   return Point3<T>(p[x], p[y], p[z]);
+}
+
+template <typename T> class Normal3 {
+public:
+  T x, y, z;
+
+  Normal3(T x, T y, T z) : x(x), y(y), z(z) {}
+
+  explicit Normal3<T>(const Vector3<T> &v) : x(v.x), y(v.y), z(v.z) {}
+
+  T operator[](int i) const {
+    if (i == 0)
+      return x;
+    if (i == 1)
+      return y;
+    return z;
+  }
+
+  T &operator[](int i) {
+    if (i == 0)
+      return x;
+    if (i == 1)
+      return y;
+    return z;
+  }
+
+  Normal3<T> operator+(const Normal3<T> &v) {
+    return Normal3(x + v.x, y + v.y, z + v.z);
+  }
+
+  Normal3<T> operator-(const Normal3<T> &v) {
+    return Normal3(x - v.x, y - v.y, z - v.z);
+  }
+
+  Normal3<T> operator*(T s) const { return Normal3<T>(s * x, s * y, s * z); }
+
+  Normal3<T> &operator+=(const Normal3<T> &v) {
+    x += v.x;
+    y += v.y;
+    z += v.z;
+    return *this;
+  }
+
+  Normal3<T> &operator-=(const Normal3<T> &v) {
+    x -= v.x;
+    y -= v.y;
+    z -= v.z;
+    return *this;
+  }
+
+  Normal3<T> &operator*=(T s) {
+    x *= s;
+    y *= s;
+    z *= s;
+    return *this;
+  }
+
+  Normal3<T> operator/(T f) const {
+    float inv = (float)1 / f;
+    return Normal3<T>(x * inv, y * inv, z * inv);
+  }
+
+  Normal3<T> &operator/=(T f) {
+    float inv = (float)1 / f;
+    x *= inv;
+    y *= inv;
+    z *= inv;
+    return *this;
+  }
+
+  Normal3<T> operator-() const { return Normal3<T>(-x, -y, -z); }
+
+  float LengthSquared() const { return x * x + y * y + z * z; }
+  float Length() const { return std::sqrt(LengthSquared()); }
+};
+
+typedef Normal3<float> Normal3f;
+
+template <typename T>
+inline Vector3<T>::Vector3(const Normal3<T> &n) : x(n.x), y(n.y), z(n.z) {}
+
+template <typename T>
+inline Normal3<T> Faceforward(const Normal3<T> &n, const Vector3<T> &v) {
+  return (Dot(n, v) < 0.f) ? -n : n;
 }
