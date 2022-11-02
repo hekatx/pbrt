@@ -70,6 +70,8 @@ public:
   T x, y, z;
 
   Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
+  Vector3() { x = y = z = 0; };
+
   explicit Vector3(const Normal3<T> &n);
 
   T operator[](int i) const {
@@ -403,3 +405,41 @@ template <typename T>
 inline Normal3<T> Faceforward(const Normal3<T> &n, const Vector3<T> &v) {
   return (Dot(n, v) < 0.f) ? -n : n;
 }
+
+class Ray {
+public:
+  Point3f o;
+  Vector3f d;
+  float time;
+  mutable float tMax;
+
+  Ray() : tMax(INFINITY), time(0.f){};
+  Ray(const Point3f &o, const Vector3f &d, float tMax = INFINITY,
+      float time = 0.f)
+      : o(o), d(d), tMax(tMax), time(time) {}
+
+  // Returning a point at a particular time
+  Point3f operator()(float t) const { return o + d * t; }
+};
+
+class RayDifferential : public Ray {
+public:
+  bool hasDifferentials;
+  Point3f rxOrigin, ryOrigin;
+  Vector3f rxDirection, ryDirection;
+
+  RayDifferential() { hasDifferentials = false; };
+  RayDifferential(const Point3f &o, const Vector3f &d, float tMax = INFINITY,
+                  float time = 0.f)
+      : Ray(o, d, tMax, time) {
+    hasDifferentials = false;
+  };
+  RayDifferential(const Ray &ray) : Ray(ray) { hasDifferentials = false; }
+
+  void ScaleDifferentials(float s) {
+    rxOrigin = o + (rxOrigin - o) * s;
+    ryOrigin = o + (ryOrigin - o) * s;
+    rxDirection = d + (rxDirection - d) * s;
+    ryDirection = d + (ryDirection - d) * s;
+  }
+};
