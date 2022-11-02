@@ -197,3 +197,122 @@ typedef Vector2<float> Vector2f;
 typedef Vector2<int> Vector2i;
 typedef Vector3<float> Vector3f;
 typedef Vector3<int> Vector3i;
+
+template <typename T> class Point3 {
+public:
+  T x, y, z;
+  Point3(T x, T y, T z) : x(x), y(y), z(z) {}
+  Point3() { x = y = z = 0; };
+
+  template <typename U>
+  explicit Point3(const Point3<U> &p) : x((T)p.x), y((T)p.y), z((T)p.z) {}
+  template <typename U> explicit operator Vector3<U>() const {
+    return Vector3<U>(x, y, z);
+  }
+  Point3<T> operator+(const Vector3<T> &v) const {
+    return Point3<T>(x + v.x, y + v.y, z + v.z);
+  }
+  Point3<T> &operator+=(const Vector3<T> &v) {
+    x += v.x;
+    y += v.y;
+    z += v.z;
+    return *this;
+  }
+  Vector3<T> operator-(const Point3<T> &p) const {
+    return Vector3<T>(x - p.x, y - p.y, z - p.z);
+  }
+  Point3<T> operator-(const Vector3<T> &v) const {
+    return Point3<T>(x - v.x, y - v.y, z - v.z);
+  }
+  Point3<T> &operator-=(const Vector3<T> &v) {
+    x -= v.x;
+    y -= v.y;
+    z -= v.z;
+    return *this;
+  }
+};
+
+template <typename T> class Point2 {
+public:
+  T x, y;
+  Point2(T x, T y) : x(x), y(y) {}
+  Point2() { x = y = 0; };
+  explicit Point2(const Point3<T> &p) : x(p.x), y(p.y) {}
+
+  template <typename U>
+  explicit Point2(const Point2<U> &p) : x((T)p.x), y((T)p.y) {}
+  template <typename U> explicit operator Vector2<U>() const {
+    return Vector2<U>(x, y);
+  }
+
+  Point2<T> operator+(const Vector2<T> &v) const {
+    return Point2<T>(x + v.x, y + v.y);
+  }
+
+  Point2<T> &operator+=(const Vector2<T> &v) {
+    x += v.x;
+    y += v.y;
+    return *this;
+  }
+
+  Vector2<T> operator-(const Point2<T> &p) const {
+    return Vector2<T>(x - p.x, y - p.y);
+  }
+
+  Point2<T> operator-(const Vector2<T> &v) const {
+    return Point2<T>(x - v.x, y - v.y);
+  }
+
+  Point2<T> &operator-=(const Vector2<T> &v) {
+    x -= v.x;
+    y -= v.y;
+    return *this;
+  }
+
+private:
+  bool HasNaNs() { return std::isnan(this->x) || std::isnan(this->y); }
+};
+
+template <typename T>
+inline float Distance(const Point3<T> &p1, const Point3<T> &p2) {
+  return (p1 - p2).Length();
+}
+
+template <typename T>
+inline float DistanceSquared(const Point3<T> &p1, const Point3<T> &p2) {
+  return (p1 - p2).LengthSquared();
+}
+
+template <typename T>
+Point3<T> Lerp(float t, const Point3<T> &p0, const Point3<T> &p1) {
+  return (1 - t) * p0 + t * p1;
+}
+
+template <typename T> Point3<T> Min(const Point3<T> &p1, const Point3<T> &p2) {
+  return Point3<T>(std::min(p1.x, p2.x), std::min(p1.y, p2.y),
+                   std::min(p1.z, p2.z));
+}
+template <typename T> Point3<T> Max(const Point3<T> &p1, const Point3<T> &p2) {
+  return Point3<T>(std::max(p1.x, p2.x), std::max(p1.y, p2.y),
+                   std::max(p1.z, p2.z));
+}
+
+template <typename T> Point3<T> Floor(const Point3<T> &p) {
+  return Point3<T>(std::floor(p.x), std::floor(p.y), std::floor(p.z));
+}
+template <typename T> Point3<T> Ceil(const Point3<T> &p) {
+  return Point3<T>(std::ceil(p.x), std::ceil(p.y), std::ceil(p.z));
+}
+template <typename T> Point3<T> Abs(const Point3<T> &p) {
+  return Point3<T>(std::abs(p.x), std::abs(p.y), std::abs(p.z));
+}
+
+typedef Point2<float> Point2f;
+typedef Point2<int> Point2i;
+typedef Point3<float> Point3f;
+typedef Point3<int> Point3i;
+
+template <typename T>
+Point3<T> Permute(const Point3<T> &p, int x, int y, int z) {
+  return Point3<T>(p[x], p[y], p[z]);
+}

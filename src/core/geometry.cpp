@@ -1,5 +1,3 @@
-#include "geometry.h"
+#include "geometry.hpp"
 
-namespace pbrt {
-
-}  // namespace pbrt
+namespace pbrt {} // namespace pbrt
