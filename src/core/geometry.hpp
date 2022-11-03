@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <ostream>
 #include <stdlib.h>
 
 template <typename T> class Normal3;
@@ -447,6 +448,61 @@ public:
 
 template <typename T> class Bounds2 {
 public:
+  T minNum = std::numeric_limits<T>::lowest();
+  T maxNum = std::numeric_limits<T>::max();
+  Point2<T> pMin = Point2<T>(maxNum, maxNum);
+  Point2<T> pMax = Point2<T>(minNum, minNum);
+
+  Bounds2(const Point2<T> &p) : pMin(p), pMax(p) {}
+  Bounds2(const Point2<T> &p1, const Point2<T> &p2)
+      : pMin(std::min(p1.x, p2.x), std::min(p1.y, p2.y)),
+        pMax(std::max(p1.x, p2.x), std::max(p1.y, p2.y)) {}
+
+  const Point2<T> &operator[](int i) const;
+  Point2<T> &operator[](int i);
+
+  Point2<T> Corner(int corner) const {
+    return Point2<T>((*this)[(corner & 1)].x, (*this)[(corner & 2) ? 1 : 0].y);
+  }
+
+  Vector2<T> Diagonal() const { return pMax - pMin; }
+
+  T Area() const {
+    Vector2<T> d = Diagonal();
+    return d.x * d.y;
+  }
+
+  int MaximumExtent() const {
+    Vector2<T> d = Diagonal();
+
+    if (d.x > d.y)
+      return 0;
+
+    return 1;
+  }
+
+  Point2<T> Lerp(const Point2f &t) const {
+    return Point2<T>(::Lerp(t.x, pMin.x, pMax.x), ::Lerp(t.y, pMin.y, pMax.y));
+  }
+
+  Vector2<T> Offset(const Point2<T> &p) const {
+    Vector2<T> o = p - pMin;
+    if (pMax.x > pMin.x)
+      o.x /= pMax.x - pMin.x;
+    if (pMax.y > pMin.y)
+      o.y /= pMax.y - pMin.y;
+    return o;
+  }
+
+  void BoundingSphere(Point2<T> *center, float *radius) const {
+    *center = (pMin + pMax) / 2;
+    *radius = Inside(*center, *this) ? Distance(*center, pMax) : 0;
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const Bounds2<T> &b) {
+    os << "[ " << b.pMin << " - " << b.pMax << " ]";
+    return os;
+  }
 };
 
 template <typename T> class Bounds3 {
