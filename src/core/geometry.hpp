@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <stdlib.h>
 
 template <typename T> class Normal3;
@@ -443,3 +444,127 @@ public:
     ryDirection = d + (ryDirection - d) * s;
   }
 };
+
+template <typename T> class Bounds2 {
+public:
+};
+
+template <typename T> class Bounds3 {
+public:
+  T minNum = std::numeric_limits<T>::lowest();
+  T maxNum = std::numeric_limits<T>::max();
+  Point3<T> pMin = Point3<T>(maxNum, maxNum, maxNum);
+  Point3<T> pMax = Point3<T>(minNum, minNum, minNum);
+
+  Bounds3(const Point3<T> &p) : pMin(p), pMax(p) {}
+  Bounds3(const Point3<T> &p1, const Point3<T> &p2)
+      : pMin(std::min(p1.x, p2.x), std::min(p1.y, p2.y), std::min(p1.z, p2.z)),
+        pMax(std::max(p1.x, p2.x), std::max(p1.y, p2.y), std::max(p1.z, p2.z)) {
+  }
+
+  const Point3<T> &operator[](int i) const;
+  Point3<T> &operator[](int i);
+  Point3<T> Corner(int corner) const {
+    return Point3<T>((*this)[(corner & 1)].x, (*this)[(corner & 2) ? 1 : 0].y,
+                     (*this)[(corner & 4) ? 1 : 0].z);
+  }
+
+  Vector3<T> Diagonal() const { return pMax - pMin; }
+
+  T Volume() const {
+    Vector3<T> d = Diagonal();
+    return d.x * d.y * d.z;
+  }
+
+  T SurfaceArea() const {
+    Vector3<T> d = Diagonal();
+    return 2 * (d.x * d.y + d.x * d.z + d.y * d.z);
+  }
+
+  int MaximumExtent() const {
+    Vector3<T> d = Diagonal();
+    if (d.x > d.y && d.x > d.z)
+      return 0;
+    else if (d.y > d.z)
+      return 1;
+    else
+      return 2;
+  }
+
+  Point3<T> Lerp(const Point3f &t) const {
+    return Point3<T>(::Lerp(t.x, pMin.x, pMax.x), ::Lerp(t.y, pMin.y, pMax.y),
+                     ::Lerp(t.z, pMin.z, pMax.z));
+  }
+
+  Vector3<T> Offset(const Point3<T> &p) const {
+    Vector3<T> o = p - pMin;
+    if (pMax.x > pMin.x)
+      o.x /= pMax.x - pMin.x;
+    if (pMax.y > pMin.y)
+      o.y /= pMax.y - pMin.y;
+    if (pMax.z > pMin.z)
+      o.z /= pMax.z - pMin.z;
+    return o;
+  }
+
+  void BoundingSphere(Point3<T> *center, float *radius) const {
+    *center = (pMin + pMax) / 2;
+    *radius = Inside(*center, *this) ? Distance(*center, pMax) : 0;
+  }
+};
+
+template <typename T>
+Bounds3<T> Union(const Bounds3<T> &b, const Point3<T> &p) {
+  return Bounds3<T>(Point3<T>(std::min(b.pMin.x, p.x), std::min(b.pMin.y, p.y),
+                              std::min(b.pMin.z, p.z)),
+                    Point3<T>(std::max(b.pMax.x, p.x), std::max(b.pMax.y, p.y),
+                              std::max(b.pMax.z, p.z)));
+}
+
+template <typename T>
+Bounds3<T> Union(const Bounds3<T> &b1, const Bounds3<T> &b2) {
+  return Bounds3<T>(
+      Point3<T>(std::min(b1.pMin.x, b2.pMin.x), std::min(b1.pMin.y, b2.pMin.y),
+                std::min(b1.pMin.z, b2.pMin.z)),
+      Point3<T>(std::max(b1.pMax.x, b2.pMax.x), std::max(b1.pMax.y, b2.pMax.y),
+                std::max(b1.pMax.z, b2.pMax.z)));
+}
+
+template <typename T>
+Bounds3<T> Intersect(const Bounds3<T> &b1, const Bounds3<T> &b2) {
+  return Bounds3<T>(
+      Point3<T>(std::max(b1.pMin.x, b2.pMin.x), std::max(b1.pMin.y, b2.pMin.y),
+                std::max(b1.pMin.z, b2.pMin.z)),
+      Point3<T>(std::min(b1.pMax.x, b2.pMax.x), std::min(b1.pMax.y, b2.pMax.y),
+                std::min(b1.pMax.z, b2.pMax.z)));
+}
+
+template <typename T>
+bool Overlaps(const Bounds3<T> &b1, const Bounds3<T> &b2) {
+  bool x = (b1.pMax.x >= b2.pMin.x) && (b1.pMin.x <= b2.pMax.x);
+  bool y = (b1.pMax.y >= b2.pMin.y) && (b1.pMin.y <= b2.pMax.y);
+  bool z = (b1.pMax.z >= b2.pMin.z) && (b1.pMin.z <= b2.pMax.z);
+  return (x && y && z);
+}
+
+template <typename T> bool Inside(const Point3<T> &p, const Bounds3<T> &b) {
+  return (p.x >= b.pMin.x && p.x <= b.pMax.x && p.y >= b.pMin.y &&
+          p.y <= b.pMax.y && p.z >= b.pMin.z && p.z <= b.pMax.z);
+}
+
+template <typename T>
+bool InsideExclusive(const Point3<T> &p, const Bounds3<T> &b) {
+  return (p.x >= b.pMin.x && p.x < b.pMax.x && p.y >= b.pMin.y &&
+          p.y < b.pMax.y && p.z >= b.pMin.z && p.z < b.pMax.z);
+}
+
+template <typename T, typename U>
+inline Bounds3<T> Expand(const Bounds3<T> &b, U delta) {
+  return Bounds3<T>(b.pMin - Vector3<T>(delta, delta, delta),
+                    b.pMax + Vector3<T>(delta, delta, delta));
+}
+
+typedef Bounds2<float> Bounds2f;
+typedef Bounds2<int> Bounds2i;
+typedef Bounds3<float> Bounds3f;
+typedef Bounds3<int> Bounds3i;
