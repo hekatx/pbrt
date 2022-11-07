@@ -1,4 +1,5 @@
 #include "geometry.hpp"
+#include "interaction.hpp"
 #include <ostream>
 
 static float Pi = 3.14159265358979323846;
@@ -182,6 +183,7 @@ public:
   Bounds3f operator()(const Bounds3f &b) const;
   Transform operator*(const Transform &t2) const;
   bool SwapHandedness() const;
+  SurfaceInteraction operator()(const SurfaceInteraction &si) const;
 
 private:
   Matrix4x4 m, mInv;

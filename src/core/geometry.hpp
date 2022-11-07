@@ -167,6 +167,10 @@ template <typename T> inline Vector3<T> Normalize(const Vector3<T> &v) {
   return v / v.Length();
 }
 
+template <typename T> inline Normal3<T> Normalize(const Normal3<T> &v) {
+  return v / v.Length();
+}
+
 template <typename T> T MinComponent(const Vector3<T> &v) {
   return std::min(v.x, std::min(v.y, v.z));
 }
@@ -344,6 +348,8 @@ template <typename T> class Normal3 {
 public:
   T x, y, z;
 
+  Normal3() { x = y = z = 0; }
+
   Normal3(T x, T y, T z) : x(x), y(y), z(z) {}
 
   explicit Normal3<T>(const Vector3<T> &v) : x(v.x), y(v.y), z(v.z) {}
@@ -410,6 +416,13 @@ public:
 
   Normal3<T> operator-() const { return Normal3<T>(-x, -y, -z); }
 
+  bool operator==(const Normal3<T> &n) const {
+    return x == n.x && y == n.y && z == n.z;
+  }
+  bool operator!=(const Normal3<T> &n) const {
+    return x != n.x || y != n.y || z != n.z;
+  }
+
   float LengthSquared() const { return x * x + y * y + z * z; }
   float Length() const { return std::sqrt(LengthSquared()); }
 };
@@ -421,6 +434,11 @@ inline Vector3<T>::Vector3(const Normal3<T> &n) : x(n.x), y(n.y), z(n.z) {}
 
 template <typename T>
 inline Normal3<T> Faceforward(const Normal3<T> &n, const Vector3<T> &v) {
+  return (Dot(n, v) < 0.f) ? -n : n;
+}
+
+template <typename T>
+inline Normal3<T> Faceforward(const Normal3<T> &n, const Normal3<T> &v) {
   return (Dot(n, v) < 0.f) ? -n : n;
 }
 
