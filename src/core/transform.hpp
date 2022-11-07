@@ -99,8 +99,6 @@ public:
     return (NOT_ONE(la2) || NOT_ONE(lb2) || NOT_ONE(lc2));
 #undef NOT_ONE
   }
-  template <typename T> inline Point3<T> operator()(const Point3<T> &p) const;
-  template <typename T> inline Vector3<T> operator()(const Vector3<T> &v) const;
 
   Transform RotateX(float theta) {
     float sinTheta = std::sin(Radians(theta));
@@ -176,28 +174,15 @@ public:
     return Transform(Inverse(cameraToWorld), cameraToWorld);
   }
 
+  template <typename T> Point3<T> operator()(const Point3<T> &p) const;
+  template <typename T> Vector3<T> operator()(const Vector3<T> &v) const;
+  template <typename T> Normal3<T> operator()(const Normal3<T> &v) const;
+  template <typename T> Ray operator()(const Ray &v) const;
+
+  Bounds3f operator()(const Bounds3f &b) const;
+  Transform operator*(const Transform &t2) const;
+  bool SwapHandedness() const;
+
 private:
   Matrix4x4 m, mInv;
 };
-
-template <typename T>
-inline Point3<T> Transform::operator()(const Point3<T> &p) const {
-  T x = p.x, y = p.y, z = p.z;
-  T xp = m.m[0][0] * x + m.m[0][1] * y + m.m[0][2] * z + m.m[0][3];
-  T yp = m.m[1][0] * x + m.m[1][1] * y + m.m[1][2] * z + m.m[1][3];
-  T zp = m.m[2][0] * x + m.m[2][1] * y + m.m[2][2] * z + m.m[2][3];
-  T wp = m.m[3][0] * x + m.m[3][1] * y + m.m[3][2] * z + m.m[3][3];
-  CHECK_NE(wp, 0);
-  if (wp == 1)
-    return Point3<T>(xp, yp, zp);
-  else
-    return Point3<T>(xp, yp, zp) / wp;
-}
-
-template <typename T>
-inline Vector3<T> Transform::operator()(const Vector3<T> &v) const {
-  T x = v.x, y = v.y, z = v.z;
-  return Vector3<T>(m.m[0][0] * x + m.m[0][1] * y + m.m[0][2] * z,
-                    m.m[1][0] * x + m.m[1][1] * y + m.m[1][2] * z,
-                    m.m[2][0] * x + m.m[2][1] * y + m.m[2][2] * z);
-}

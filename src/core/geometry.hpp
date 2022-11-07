@@ -225,6 +225,22 @@ public:
     z += v.z;
     return *this;
   }
+
+  template <typename U> Point3<T> operator/(U f) const {
+    CHECK_NE(f, 0);
+    float inv = (float)1 / f;
+    return Point3<T>(inv * x, inv * y, inv * z);
+  }
+
+  template <typename U> Point3<T> &operator/=(U f) {
+    CHECK_NE(f, 0);
+    float inv = (float)1 / f;
+    x *= inv;
+    y *= inv;
+    z *= inv;
+    return *this;
+  }
+
   Vector3<T> operator-(const Point3<T> &p) const {
     return Vector3<T>(x - p.x, y - p.y, z - p.z);
   }
